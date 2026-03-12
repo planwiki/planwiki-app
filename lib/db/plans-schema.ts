@@ -10,7 +10,6 @@ export const plans = pgTable("plans", {
     .references(() => user.id, { onDelete: "cascade" }),
   title: text("title"),
   slug: text("slug").unique(),
-  status: text("status").default("draft").notNull(),
   isPublic: boolean("is_public").default(false),
   createdAt: timestamp("created_at", {
     withTimezone: true,
