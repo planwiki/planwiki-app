@@ -16,7 +16,6 @@ const demoExamples = [
     id: "coding",
     label: "Coding Plan",
     title: "Axerr MVP Coding Plan",
-    theme: "from-sky-200 via-cyan-100 to-stone-50",
     plan: [
       "Day 1 — Setup: Next.js, Tailwind, shadcn/ui, tRPC, Node, Postgres, Drizzle ORM.",
       "Day 2 — Workspace system: create workspace, list workspaces, workspace view, users/workspaces/plans/widgets tables.",
@@ -57,7 +56,6 @@ const demoExamples = [
     id: "budget",
     label: "Budget",
     title: "Axerr Budget Plan",
-    theme: "from-amber-200 via-orange-100 to-stone-50",
     plan: [
       "Initial budget: $1,200.",
       "Infrastructure: Vercel $20/month, Neon/Postgres $15/month, Storage $10/month.",
@@ -113,7 +111,6 @@ const demoExamples = [
     id: "launch",
     label: "Launch Plan",
     title: "Axerr Startup Launch Plan",
-    theme: "from-lime-200 via-emerald-100 to-stone-50",
     plan: [
       "Phase 1 — Idea validation: define the core problem, target indie hackers, startup founders, PMs, and students, then validate on Reddit, X, and Indie Hackers.",
       "Create a waitlist landing page with product description, email signup, and demo screenshots.",
@@ -195,7 +192,7 @@ export default function LandingPage() {
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-[#f6f1e8] text-zinc-950 selection:bg-zinc-950 selection:text-[#f6f1e8]">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(245,158,11,0.2),transparent_28%),radial-gradient(circle_at_85%_20%,rgba(14,165,233,0.18),transparent_24%),linear-gradient(to_right,rgba(24,24,27,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(24,24,27,0.06)_1px,transparent_1px)] bg-[size:auto,auto,28px_28px,28px_28px]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(22,163,74,0.12),transparent_24%),radial-gradient(circle_at_85%_18%,rgba(245,158,11,0.14),transparent_20%),linear-gradient(to_right,rgba(24,24,27,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(24,24,27,0.05)_1px,transparent_1px)] bg-[size:auto,auto,28px_28px,28px_28px]" />
 
       <header
         className={`fixed left-0 top-0 z-50 w-full transition-all duration-300 ${
@@ -296,7 +293,7 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="mt-12 flex flex-wrap gap-3">
+            <div className="mt-10 flex flex-wrap gap-3">
               {demoExamples.map((demo, index) => (
                 <button
                   key={demo.id}
@@ -313,8 +310,8 @@ export default function LandingPage() {
               ))}
             </div>
 
-            <div className="mt-8 grid gap-6 xl:grid-cols-[1fr_auto_1fr] xl:items-center">
-              <article className="border border-zinc-950/10 bg-[#f7f2ea] p-6 md:p-8">
+            <div className="mt-8 grid gap-4 xl:grid-cols-[1fr_auto_1fr] xl:items-center">
+              <article className="border border-zinc-950/10 bg-[#f7f2ea] p-5 md:p-8">
                 <p className="text-xs uppercase tracking-[0.32em] text-zinc-500">
                   From this
                 </p>
@@ -336,17 +333,17 @@ export default function LandingPage() {
                 </div>
               </article>
 
-              <div className="flex items-center justify-center">
-                <div className="flex h-16 w-16 items-center justify-center border border-zinc-950 bg-zinc-950 text-white md:h-20 md:w-20">
+              <div className="flex items-center justify-center py-1 xl:py-0">
+                <div className="flex h-14 w-14 items-center justify-center border border-zinc-950 bg-zinc-950 text-white md:h-16 md:w-16">
                   <HugeiconsIcon
                     icon={ArrowRight}
-                    className="h-8 w-8 md:h-10 md:w-10"
+                    className="h-7 w-7 md:h-8 md:w-8"
                   />
                 </div>
               </div>
 
               <article
-                className={`overflow-hidden border border-white/20 bg-gradient-to-br ${currentDemo.theme} p-6 text-zinc-950 md:p-8`}
+                className="overflow-hidden border border-zinc-950/10 bg-[#f7f2ea] p-5 text-zinc-950 md:p-8"
               >
                 <p className="text-xs uppercase tracking-[0.32em] text-zinc-600">
                   To this
@@ -359,7 +356,7 @@ export default function LandingPage() {
                     {currentDemo.widget.subtitle}
                   </p>
                 ) : null}
-                <div className="mt-7 border border-zinc-950/10 bg-white/80 p-4 backdrop-blur-sm md:p-5">
+                <div className="mt-6 border border-zinc-950/10 bg-white p-4 md:p-5">
                   {activeDemo === 0 ? (
                     <div className="grid gap-3 md:grid-cols-2">
                       {[
@@ -375,9 +372,9 @@ export default function LandingPage() {
                             key={task}
                             type="button"
                             onClick={() => setSelectedCodingTask(String(task))}
-                            className={`cursor-pointer border bg-white p-4 text-left transition-all hover:-translate-y-0.5 ${
+                            className={`cursor-pointer border p-4 text-left transition-all hover:-translate-y-0.5 ${
                               isSelected
-                                ? "border-zinc-950 shadow-[4px_4px_0_0_rgba(24,24,27,0.16)]"
+                                ? "border-emerald-700 bg-emerald-50"
                                 : "border-zinc-950/10 hover:border-zinc-950 hover:shadow-[4px_4px_0_0_rgba(24,24,27,0.12)]"
                             }`}
                           >
@@ -391,8 +388,10 @@ export default function LandingPage() {
                                 </p>
                               </div>
                               <span
-                                className={`mt-1 h-3 w-3 border border-zinc-950 ${
-                                  isSelected ? "bg-zinc-950" : "bg-transparent"
+                                className={`mt-1 h-3 w-3 border ${
+                                  isSelected
+                                    ? "border-emerald-700 bg-emerald-700"
+                                    : "border-zinc-950 bg-transparent"
                                 }`}
                               />
                             </div>
@@ -442,8 +441,8 @@ export default function LandingPage() {
                               }
                               className={`grid w-full cursor-pointer grid-cols-[1fr_auto] gap-3 border px-2 py-2 text-left transition-colors ${
                                 isSelected
-                                  ? "border-zinc-950 bg-zinc-950 text-white"
-                                  : "border-transparent hover:border-zinc-950/10 hover:bg-zinc-50"
+                                  ? "border-emerald-700 bg-emerald-700 text-white"
+                                  : "border-transparent bg-white hover:border-zinc-950/10 hover:bg-zinc-50"
                               }`}
                             >
                               <span>{label}</span>
@@ -477,13 +476,13 @@ export default function LandingPage() {
                             type="button"
                             onClick={() => setSelectedLaunchStep(String(task))}
                             className={`grid w-full cursor-pointer grid-cols-[auto_1fr_auto] items-center gap-3 border-b border-zinc-900/10 pb-3 text-left transition-colors hover:bg-white/60 last:border-b-0 last:pb-0 ${
-                              isSelected ? "bg-white/70" : ""
+                              isSelected ? "bg-emerald-50/70" : ""
                             }`}
                           >
                             <span
                               className={`border px-2 py-1 text-[10px] uppercase tracking-[0.24em] ${
                                 isSelected
-                                  ? "border-zinc-950 bg-zinc-950 text-white"
+                                  ? "border-emerald-700 bg-emerald-700 text-white"
                                   : "border-zinc-950 bg-[#f6f1e8] text-zinc-600"
                               }`}
                             >
@@ -499,9 +498,7 @@ export default function LandingPage() {
                               {task}
                             </span>
                             <span
-                              className={
-                                done ? "text-emerald-700" : "text-amber-700"
-                              }
+                              className={done ? "text-emerald-700" : "text-zinc-600"}
                             >
                               {isSelected ? "open" : done ? "done" : "next"}
                             </span>
@@ -514,7 +511,7 @@ export default function LandingPage() {
               </article>
             </div>
 
-            <div className="mt-8 flex items-end justify-between border border-zinc-950/10 bg-[#f7f2ea] p-6">
+            <div className="mt-8 flex flex-col gap-4 border border-zinc-950/10 bg-[#f7f2ea] p-5 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:p-6">
               <div>
                 <p className="text-xs uppercase tracking-[0.32em] text-zinc-500">
                   Demo workspace
@@ -526,7 +523,7 @@ export default function LandingPage() {
               <Button
                 asChild
                 size="lg"
-                className="ml-6 h-12 border border-zinc-950 bg-zinc-950 px-6 text-white hover:bg-zinc-800 rounded-sm"
+                className="h-12 border border-zinc-950 bg-zinc-950 px-6 text-white hover:bg-zinc-800 rounded-none"
               >
                 <Link href="/login">
                   Explore Demo Workspace
@@ -627,7 +624,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section
+        {/* <section
           id="open-source"
           className="mx-auto max-w-7xl px-4 py-20 md:px-6"
         >
@@ -679,10 +676,10 @@ export default function LandingPage() {
               </Button>
             </div>
           </div>
-        </section>
+        </section> */}
 
         <footer className="mx-auto flex max-w-7xl items-center justify-between px-4 pb-10 pt-2 text-sm text-zinc-600 md:px-6">
-          <p>© PlanWiki</p>
+          <p>© {new Date().getFullYear()} PlanWiki</p>
           <div className="flex items-center gap-6">
             <Link
               href="/privacy"

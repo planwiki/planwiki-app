@@ -25,6 +25,14 @@ export function LandingNav({ showLogo = true }: LandingNavProps) {
 
       <div className="flex items-center gap-2 md:gap-3 ml-auto">
         <div className="hidden md:flex items-center gap-3">
+          <Link href="#features">
+            <Button
+              variant="ghost"
+              className="text-zinc-600 hover:text-zinc-950 rounded-sm"
+            >
+              Features
+            </Button>
+          </Link>
           <Link href="#demo">
             <Button
               variant="ghost"
@@ -41,7 +49,7 @@ export function LandingNav({ showLogo = true }: LandingNavProps) {
               Pricing
             </Button>
           </Link>
-          <Link
+          {/* <Link
             href="https://github.com/planwiki/planwiki-app"
             target="_blank"
             rel="noreferrer"
@@ -67,7 +75,7 @@ export function LandingNav({ showLogo = true }: LandingNavProps) {
               </svg>
               GitHub
             </Button>
-          </Link>
+          </Link> */}
         </div>
 
         <Link href="/login">

@@ -1,6 +1,7 @@
-import { auth } from "@/lib/auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { initTRPC, TRPCError } from "@trpc/server";
-import { headers } from "next/headers";
+
+import { getServerSession } from "next-auth";
 
 const t = initTRPC.create();
 
@@ -9,11 +10,9 @@ export const publicProcedure = t.procedure;
 export const middleware = t.middleware;
 
 export const privateProcedure = publicProcedure.use(async ({ ctx, next }) => {
-  const authSession = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getServerSession(authOptions);
 
-  if (!authSession?.user) {
+  if (!session?.user) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "Please sign in to continue",
@@ -23,8 +22,7 @@ export const privateProcedure = publicProcedure.use(async ({ ctx, next }) => {
   return next({
     ctx: {
       ...ctx,
-      user: authSession.user,
-      session: authSession.session,
+      user: session.user,
     },
   });
 });
