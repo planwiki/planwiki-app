@@ -27,7 +27,7 @@ const isPublic = (pathname: string) => {
   return false;
 };
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isAuthenticated = SESSION_COOKIE_NAMES.some((name) =>
     request.cookies.get(name),
