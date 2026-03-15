@@ -1,8 +1,18 @@
-import { createClient } from "@supabase/supabase-js";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 
-export const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_KEY!,
-);
+import * as schema from "./schema";
 
-export * from "./types";
+const globalForDb = globalThis as typeof globalThis & {
+  __planwikiPool?: Pool;
+};
+
+const pool =
+  globalForDb.__planwikiPool ??
+  new Pool({ connectionString: process.env.DATABASE_URL });
+
+if (process.env.NODE_ENV !== "production") {
+  globalForDb.__planwikiPool = pool;
+}
+
+export const db = drizzle(pool, { schema });

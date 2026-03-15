@@ -1,18 +1,18 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { signOut, useSession } from "next-auth/react"
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Logout01Icon,
   MoreHorizontalIcon,
   Settings02Icon,
   UserCircleIcon,
-} from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 
-import { cn } from "@/lib/utils"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { authClient } from "@/lib/auth/client";
+import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,12 +20,12 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
 const avatarColors = [
   "bg-rose-500",
@@ -34,33 +34,31 @@ const avatarColors = [
   "bg-amber-500",
   "bg-fuchsia-500",
   "bg-cyan-500",
-]
+];
 
 function getAvatarColor(name: string) {
-  return avatarColors[name.charCodeAt(0) % avatarColors.length] ?? avatarColors[0]
+  return (
+    avatarColors[name.charCodeAt(0) % avatarColors.length] ?? avatarColors[0]
+  );
 }
 
 export function NavUser() {
-  const router = useRouter()
-  const { data: session, status } = useSession()
+  const router = useRouter();
+  const { data: session, isPending } = authClient.useSession();
+  const user = session?.user ?? null;
 
   const userName =
-    (
-      ((session?.user as any)?.name as string) ||
-      session?.user?.email?.split("@")[0] ||
-      "User"
-    )?.trim() || "User"
-  const userEmail = session?.user?.email || ""
-  const avatarImage = (session?.user as { image?: string })?.image ?? null
-  const avatarInitial = (userName[0] || "U").toUpperCase()
-  const avatarColor = getAvatarColor(userName)
-  const isPending = status === "loading"
-  const hasUser = Boolean(session?.user)
+    (user?.name || user?.email?.split("@")[0] || "User")?.trim() || "User";
+  const userEmail = user?.email || "";
+  const avatarImage = user?.image ?? null;
+  const avatarInitial = (userName[0] || "U").toUpperCase();
+  const avatarColor = getAvatarColor(userName);
+  const hasUser = Boolean(user);
 
   const handleSignOut = async () => {
-    await signOut({ redirect: false })
-    router.push("/")
-  }
+    await authClient.signOut();
+    router.push("/");
+  };
 
   return (
     <SidebarMenu>
@@ -76,10 +74,7 @@ export function NavUser() {
                   <AvatarImage src={avatarImage} alt={userName} />
                 ) : null}
                 <AvatarFallback
-                  className={cn(
-                    "font-semibold text-white",
-                    avatarColor,
-                  )}
+                  className={cn("font-semibold text-white", avatarColor)}
                 >
                   {avatarInitial}
                 </AvatarFallback>
@@ -114,10 +109,7 @@ export function NavUser() {
                     <AvatarImage src={avatarImage} alt={userName} />
                   ) : null}
                   <AvatarFallback
-                    className={cn(
-                      "font-semibold text-white",
-                      avatarColor,
-                    )}
+                    className={cn("font-semibold text-white", avatarColor)}
                   >
                     {avatarInitial}
                   </AvatarFallback>
@@ -169,5 +161,5 @@ export function NavUser() {
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
-  )
+  );
 }

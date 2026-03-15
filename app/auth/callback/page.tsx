@@ -1,88 +1,59 @@
 "use client";
 
-import { useEffect } from "react";
-
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 
 import { supabase } from "@/lib/db";
-import { toast } from "sonner";
+import { authClient } from "@/lib/auth-client";
 
 export default function AuthCallbackPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { data: session, isPending } = authClient.useSession();
+  const hasHandledRef = useRef(false);
 
   useEffect(() => {
-    const handleCallback = async () => {
-      try {
-        const hash = window.location.hash;
+    if (isPending || hasHandledRef.current) {
+      return;
+    }
 
-        if (!hash) {
-          router.push("/login?error=no_hash");
-          return;
-        }
+    const authError = searchParams.get("error");
+    if (authError) {
+      hasHandledRef.current = true;
+      toast.error("Failed to authenticate. Please try again.");
+      router.push(`/login?error=${encodeURIComponent(authError)}`);
+      return;
+    }
 
-        const params = new URLSearchParams(hash.substring(1));
-        const accessToken = params.get("access_token");
-        const refreshToken = params.get("refresh_token");
+    const user = session?.user;
+    if (!user) {
+      hasHandledRef.current = true;
+      toast.error("No active session found. Please sign in again.");
+      router.push("/login?error=no_session");
+      return;
+    }
 
-        if (!accessToken) {
-          toast.error("No access token found. Please try again.");
-          router.push("/login?error=no_token");
-          return;
-        }
+    hasHandledRef.current = true;
 
-        const { data, error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken || "",
-        });
+    const finishSignIn = async () => {
+      const { data: onboarding, error } = await supabase
+        .from("onboarding")
+        .select("has_seen_onboarding")
+        .eq("user_id", user.id)
+        .maybeSingle();
 
-        if (error) {
-          toast.error("Failed to authenticate. Please try again.");
-          router.push("/login?error=session_failed");
-          return;
-        }
-
-        const user = data.user;
-
-        if (!user) {
-          toast.error("No user data found. Please try again.");
-          router.push("/login?error=no_user");
-          return;
-        }
-
-        const result = await signIn("credentials", {
-          userId: user.id,
-          accessToken,
-          redirect: false,
-        });
-
-        if (result?.error) {
-          toast.error("Failed to authenticate. Please try again.");
-          router.push("/login?error=nextauth_failed");
-          return;
-        }
-
-        const { data: onboarding, error: onboardingError } = await supabase
-          .from("onboarding")
-          .select("has_seen_onboarding")
-          .eq("user_id", user.id)
-          .maybeSingle();
-
-        if (onboardingError) {
-          toast.error("Failed to load onboarding state. Please try again.");
-          router.push("/login?error=onboarding_check_failed");
-          return;
-        }
-
-        router.push(onboarding?.has_seen_onboarding ? "/new" : "/welcome");
-      } catch {
-        toast.error("An unexpected error occurred. Please try again.");
-        router.push("/login?error=auth_callback_failed");
+      if (error) {
+        toast.error("Failed to load onboarding state. Please try again.");
+        router.push("/login?error=onboarding_check_failed");
+        return;
       }
+
+      router.push(onboarding?.has_seen_onboarding ? "/new" : "/welcome");
     };
 
-    handleCallback();
-  }, [router]);
+    void finishSignIn();
+  }, [isPending, router, searchParams, session]);
 
   return (
     <main className="flex min-h-screen flex-col bg-[#f6f1e8]">

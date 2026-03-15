@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
-
 import Image from "next/image";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/db";
+import { authClient } from "@/lib/auth/client";
 import { toast } from "sonner";
 
 export default function LoginPage() {
@@ -14,15 +13,17 @@ export default function LoginPage() {
 
   const handleOAuthSignIn = async () => {
     setIsLoading(true);
+    const callbackURL = `${window.location.origin}/auth/callback`;
 
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { error } = await authClient.signIn.social({
         provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-          queryParams: {
-            access_type: "offline",
-            prompt: "consent",
+        callbackURL,
+        newUserCallbackURL: callbackURL,
+        errorCallbackURL: callbackURL,
+        fetchOptions: {
+          onError() {
+            setIsLoading(false);
           },
         },
       });

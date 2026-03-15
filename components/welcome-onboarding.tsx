@@ -8,7 +8,6 @@ import {
   type KeyboardEvent,
 } from "react"
 import Link from "next/link"
-import { useSession } from "next-auth/react"
 
 import { ArrowRight } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -87,8 +86,15 @@ const loadingStages = [
   "Building workspace...",
 ]
 
-export function WelcomeOnboarding() {
-  const { data: session } = useSession()
+type WelcomeOnboardingProps = {
+  userName?: string | null
+  userEmail?: string | null
+}
+
+export function WelcomeOnboarding({
+  userName,
+  userEmail,
+}: WelcomeOnboardingProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [input, setInput] = useState("")
   const [selectedSampleId, setSelectedSampleId] = useState<
@@ -115,15 +121,8 @@ export function WelcomeOnboarding() {
   }, [input, phase])
 
   useEffect(() => {
-    if (!generated) return
-    setWidgets(generated.widgets)
-    setSelectedTableRows({})
-  }, [generated])
-
-  useEffect(() => {
     if (phase !== "loading") return
 
-    setLoadingIndex(0)
     const stepMs = Math.floor(5000 / loadingStages.length)
 
     const timers = loadingStages.map((_, index) =>
@@ -133,7 +132,10 @@ export function WelcomeOnboarding() {
           return
         }
 
-        setGenerated(generateWorkspaceFromPlan(input.trim()))
+        const nextGenerated = generateWorkspaceFromPlan(input.trim())
+        setGenerated(nextGenerated)
+        setWidgets(nextGenerated.widgets)
+        setSelectedTableRows({})
         setPhase("preview")
       }, (index + 1) * stepMs),
     )
@@ -145,8 +147,8 @@ export function WelcomeOnboarding() {
 
   const rawUserName =
     (
-      ((session?.user as { name?: string | null } | undefined)?.name as string) ||
-      session?.user?.email?.split("@")[0] ||
+      userName ||
+      userEmail?.split("@")[0] ||
       "there"
     )?.trim() || "there"
   const firstName = rawUserName.split(" ")[0] || "there"
@@ -163,8 +165,11 @@ export function WelcomeOnboarding() {
 
   const handleGenerate = () => {
     if (!input.trim()) return
+
+    setLoadingIndex(0)
     setGenerated(null)
     setWidgets([])
+    setSelectedTableRows({})
     setPhase("loading")
   }
 

@@ -4,7 +4,6 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider } from "@/providers/auth-provider";
 import { QueryProvider } from "@/providers/trpc-provider";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -130,11 +129,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} antialiased`}
       >
-        <AuthProvider>
-          <TooltipProvider>
-            <QueryProvider>{children}</QueryProvider>
-          </TooltipProvider>
-        </AuthProvider>
+        <TooltipProvider>
+          <QueryProvider>{children}</QueryProvider>
+        </TooltipProvider>
+
         <Toaster richColors />
       </body>
     </html>

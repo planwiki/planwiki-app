@@ -8,16 +8,17 @@ import {
   useTransition,
   type KeyboardEvent,
 } from "react";
-import { useSession } from "next-auth/react";
 
 import { SentIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
+import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
 export function NewWorkspaceChat() {
-  const { data: session } = useSession();
+  const { data: session } = authClient.useSession();
+  const user = session?.user ?? null;
   const [input, setInput] = useState("");
   const [isPending, startTransition] = useTransition();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -37,8 +38,8 @@ export function NewWorkspaceChat() {
 
   const rawUserName =
     (
-      ((session?.user as any)?.name as string) ||
-      session?.user?.email?.split("@")[0] ||
+      user?.name ||
+      user?.email?.split("@")[0] ||
       "there"
     )?.trim() || "there";
   const firstName = rawUserName.split(" ")[0] || "there";

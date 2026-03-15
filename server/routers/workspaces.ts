@@ -1,13 +1,8 @@
+import { and, asc, eq } from "drizzle-orm";
 import { z } from "zod";
 
-import {
-  mapMessageRow,
-  mapWorkspaceRow,
-  type MessageRow,
-  type WorkspaceMessage,
-  type WorkspaceRow,
-} from "@/lib/db/types";
-import { supabase } from "@/lib/db";
+import { db } from "@/lib/db";
+import { messages, workspaces } from "@/lib/db/schema";
 import {
   allowedWidgetTypes,
   coerceWidgetId,
@@ -47,7 +42,9 @@ const readString = (value: unknown, fallback: string) =>
   typeof value === "string" && value.trim() ? value : fallback;
 
 const readStringArray = (value: unknown) =>
-  Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+  Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
 
 const readChecklistItems = (value: unknown) =>
   Array.isArray(value)
@@ -68,7 +65,9 @@ const readPhaseItems = (value: unknown): PhaseItem[] =>
           id: coerceWidgetId(typeof item.id === "string" ? item.id : undefined),
           name: readString(item.name, `Phase ${index + 1}`),
           status:
-            item.status === "done" || item.status === "active" || item.status === "pending"
+            item.status === "done" ||
+            item.status === "active" ||
+            item.status === "pending"
               ? item.status
               : "pending",
           tasks: readStringArray(item.tasks),
@@ -76,24 +75,13 @@ const readPhaseItems = (value: unknown): PhaseItem[] =>
     : [];
 
 const readRows = (value: unknown) =>
-  Array.isArray(value)
-    ? value.map((row) => readStringArray(row))
-    : [];
+  Array.isArray(value) ? value.map((row) => readStringArray(row)) : [];
 
-const loadWorkspaceMessages = async (
-  workspaceId: string,
-): Promise<WorkspaceMessage[]> => {
-  const { data, error } = await supabase
-    .from("messages")
-    .select("*")
-    .eq("workspace_id", workspaceId)
-    .order("created_at", { ascending: true });
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  return (data as MessageRow[]).map(mapMessageRow);
+const loadWorkspaceMessages = async (workspaceId: string) => {
+  return db.query.messages.findMany({
+    where: eq(messages.workspaceId, workspaceId),
+    orderBy: asc(messages.createdAt),
+  });
 };
 
 export const workspacesRouter = router({
@@ -104,22 +92,14 @@ export const workspacesRouter = router({
       }),
     )
     .query(async ({ input }) => {
-      const { data, error } = await supabase
-        .from("workspaces")
-        .select("*")
-        .eq("slug", input.slug)
-        .limit(1)
-        .maybeSingle();
+      const workspace = await db.query.workspaces.findFirst({
+        where: eq(workspaces.slug, input.slug),
+      });
 
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      if (!data) {
+      if (!workspace) {
         return null;
       }
 
-      const workspace = mapWorkspaceRow(data as WorkspaceRow);
       const workspaceMessages = await loadWorkspaceMessages(workspace.id);
 
       return {
@@ -138,21 +118,12 @@ export const workspacesRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const workspaceResult = await supabase
-        .from("workspaces")
-        .select("*")
-        .eq("id", input.workspaceId)
-        .eq("user_id", ctx.user!.id)
-        .limit(1)
-        .maybeSingle();
-
-      if (workspaceResult.error) {
-        throw new Error(workspaceResult.error.message);
-      }
-
-      const workspace = workspaceResult.data
-        ? mapWorkspaceRow(workspaceResult.data as WorkspaceRow)
-        : null;
+      const workspace = await db.query.workspaces.findFirst({
+        where: and(
+          eq(workspaces.id, input.workspaceId),
+          eq(workspaces.userId, ctx.user!.id),
+        ),
+      });
 
       if (!workspace) {
         throw new Error("Workspace not found or you do not have access.");
@@ -179,7 +150,9 @@ export const workspacesRouter = router({
                 ? (raw.type as WorkspaceWidget["type"])
                 : "notes";
               const base = {
-                id: coerceWidgetId(typeof raw.id === "string" ? raw.id : undefined),
+                id: coerceWidgetId(
+                  typeof raw.id === "string" ? raw.id : undefined,
+                ),
                 type,
                 order: typeof raw.order === "number" ? raw.order : index + 1,
                 title: readString(raw.title, workspace.title ?? "Workspace widget"),
@@ -214,9 +187,7 @@ export const workspacesRouter = router({
                   } satisfies WorkspaceWidget;
               }
             })
-            .filter((widget) =>
-              allowedWidgetTypes.includes(widget.type as never),
-            );
+            .filter((widget) => allowedWidgetTypes.includes(widget.type as never));
         }
       } catch {
         widgets = [
@@ -230,26 +201,19 @@ export const workspacesRouter = router({
         ];
       }
 
-      const updatedWorkspaceResult = await supabase
-        .from("workspaces")
-        .update({
-          widgets,
-        })
-        .eq("id", workspace.id)
-        .select("*")
-        .single();
+      const [updatedWorkspace] = await db
+        .update(workspaces)
+        .set({ widgets })
+        .where(eq(workspaces.id, workspace.id))
+        .returning();
 
-      if (updatedWorkspaceResult.error) {
-        throw new Error(updatedWorkspaceResult.error.message);
+      if (!updatedWorkspace) {
+        throw new Error("Failed to update workspace.");
       }
 
-      const updatedWorkspace = mapWorkspaceRow(
-        updatedWorkspaceResult.data as WorkspaceRow,
-      );
-
-      const insertMessagesResult = await supabase.from("messages").insert([
+      await db.insert(messages).values([
         {
-          workspace_id: workspace.id,
+          workspaceId: workspace.id,
           role: "user",
           content: {
             type: "text",
@@ -259,7 +223,7 @@ export const workspacesRouter = router({
           },
         },
         {
-          workspace_id: workspace.id,
+          workspaceId: workspace.id,
           role: "assistant",
           content: {
             type: "widgets",
@@ -267,10 +231,6 @@ export const workspacesRouter = router({
           },
         },
       ]);
-
-      if (insertMessagesResult.error) {
-        throw new Error(insertMessagesResult.error.message);
-      }
 
       const workspaceMessages = await loadWorkspaceMessages(workspace.id);
 
