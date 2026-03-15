@@ -8,12 +8,15 @@ import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth/client";
 import { toast } from "sonner";
 
+const canonicalAppUrl =
+  process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://planwiki.com";
+
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleOAuthSignIn = async () => {
     setIsLoading(true);
-    const callbackURL = `${window.location.origin}/auth/callback`;
+    const callbackURL = `${canonicalAppUrl}/auth/callback`;
 
     try {
       const { error } = await authClient.signIn.social({
@@ -87,5 +90,5 @@ export default function LoginPage() {
         </div>
       </section>
     </main>
-  )
+  );
 }
