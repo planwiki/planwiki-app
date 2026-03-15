@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     template: "%s | PlanWiki",
   },
   description:
-    "PlanWiki turns AI-generated plans into interactive workspaces with tasks, cards, checklists, table widgets, progress tracking, and chat-backed messages so you can execute, edit, and share plans instead of managing static text.",
+    "PlanWiki helps you turn AI plans into something clear, organized, and easy to use.",
   keywords: [
     "PlanWiki",
     "AI plans",
@@ -74,7 +74,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "PlanWiki - Turn AI Plans into Interactive Workspaces",
     description:
-      "Turn AI-generated plans from ChatGPT, Claude, Gemini, and other tools into structured workspaces with widgets, tables, checklists, messages, and shareable public plan pages.",
+      "PlanWiki helps you turn AI plans into something clear, organized, and easy to use.",
     url: "https://planwiki.com",
     siteName: "PlanWiki",
     locale: "en_US",
@@ -92,7 +92,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "PlanWiki - Turn AI Plans into Interactive Workspaces",
     description:
-      "PlanWiki turns AI-generated plans into structured workspaces with tasks, tables, checklists, messages, progress tracking, and shareable plan pages.",
+      "PlanWiki helps you turn AI plans into something clear, organized, and easy to use.",
     images: ["/logo.png"],
   },
   robots: {
