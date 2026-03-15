@@ -22,9 +22,10 @@ export function TableWidget({
   onTableRowToggle,
 }: WidgetComponentProps) {
   const data = widget as TableWidgetData
+  const activeRows = selectedTableRows.length ? selectedTableRows : (data.selectedRows ?? [])
 
   return (
-    <Card className="rounded-none border border-zinc-950/10 bg-white/70 py-0 shadow-none backdrop-blur-sm">
+    <Card className="rounded-none border border-zinc-950/10 bg-white py-0 shadow-none">
       <CardHeader className="border-b border-zinc-950/10 px-4 py-4 md:px-6 md:py-5">
         <CardDescription className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
           Structured reference
@@ -54,24 +55,27 @@ export function TableWidget({
             {data.rows.map((row, index) => (
               <TableRow
                 key={`${data.id}-${index}`}
+                onClick={() => onTableRowToggle?.(data.id, index)}
                 className={`border-zinc-950/10 ${
-                  selectedTableRows.includes(index)
-                    ? "bg-emerald-50/70"
-                    : "bg-white/50 hover:bg-white"
-                }`}
-                data-state={selectedTableRows.includes(index) ? "selected" : undefined}
+                  activeRows.includes(index)
+                    ? "border-emerald-200 bg-emerald-50/70"
+                    : "bg-white hover:bg-[#faf8f3]"
+                } ${onTableRowToggle ? "cursor-pointer" : ""}`}
+                data-state={activeRows.includes(index) ? "selected" : undefined}
               >
                 <TableCell className="px-4 py-3">
                   <Checkbox
-                    checked={selectedTableRows.includes(index)}
+                    checked={activeRows.includes(index)}
+                    onClick={(event) => event.stopPropagation()}
                     onCheckedChange={() => onTableRowToggle?.(data.id, index)}
+                    className="border-zinc-950/20 data-checked:border-emerald-700 data-checked:bg-emerald-700"
                   />
                 </TableCell>
                 {row.map((cell, cellIndex) => (
                   <TableCell
                     key={`${data.id}-${index}-${cellIndex}`}
                     className={`px-4 py-3 align-top whitespace-normal md:px-6 ${
-                      selectedTableRows.includes(index)
+                      activeRows.includes(index)
                         ? "text-emerald-950"
                         : "text-zinc-700"
                     }`}

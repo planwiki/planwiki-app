@@ -1,12 +1,20 @@
 import { nanoid } from "nanoid"
 import type { ComponentType } from "react"
+import { z } from "zod"
 
 import { ChecklistWidget } from "@/components/widgets/checklist-widget"
 import { NotesWidget } from "@/components/widgets/notes-widget"
 import { PhasesWidget } from "@/components/widgets/phases-widget"
 import { TableWidget } from "@/components/widgets/table-widget"
 
-export type WorkspaceWidgetType = "checklist" | "phases" | "table" | "notes"
+export const WORKSPACE_WIDGET_TYPES = [
+  "checklist",
+  "phases",
+  "table",
+  "notes",
+] as const
+
+export type WorkspaceWidgetType = (typeof WORKSPACE_WIDGET_TYPES)[number]
 
 export interface ChecklistItem {
   id: string
@@ -43,6 +51,7 @@ export interface PhasesWidgetData extends WorkspaceWidgetBase<"phases"> {
 export interface TableWidgetData extends WorkspaceWidgetBase<"table"> {
   columns: string[]
   rows: string[][]
+  selectedRows?: number[]
 }
 
 export interface NotesWidgetData extends WorkspaceWidgetBase<"notes"> {
@@ -58,9 +67,60 @@ export type WorkspaceWidget =
 export interface WidgetComponentProps {
   widget: WorkspaceWidget
   onChecklistItemToggle?: (widgetId: string, itemId: string) => void
+  onPhaseStatusChange?: (widgetId: string, phaseId: string) => void
   selectedTableRows?: number[]
   onTableRowToggle?: (widgetId: string, rowIndex: number) => void
 }
+
+export const checklistItemSchema = z.object({
+  id: z.string().min(1),
+  text: z.string().min(1),
+  done: z.boolean(),
+})
+
+export const phaseItemSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  status: z.enum(["pending", "active", "done"]),
+  tasks: z.array(z.string().min(1)),
+})
+
+const workspaceWidgetBaseSchema = z.object({
+  id: z.string().min(1),
+  order: z.number().int(),
+  title: z.string().min(1).nullable(),
+})
+
+export const checklistWidgetSchema = workspaceWidgetBaseSchema.extend({
+  type: z.literal("checklist"),
+  items: z.array(checklistItemSchema),
+})
+
+export const phasesWidgetSchema = workspaceWidgetBaseSchema.extend({
+  type: z.literal("phases"),
+  items: z.array(phaseItemSchema),
+})
+
+export const tableWidgetSchema = workspaceWidgetBaseSchema.extend({
+  type: z.literal("table"),
+  columns: z.array(z.string().min(1)),
+  rows: z.array(z.array(z.string())),
+  selectedRows: z.array(z.number().int().min(0)).optional(),
+})
+
+export const notesWidgetSchema = workspaceWidgetBaseSchema.extend({
+  type: z.literal("notes"),
+  content: z.string(),
+})
+
+export const workspaceWidgetSchema = z.discriminatedUnion("type", [
+  checklistWidgetSchema,
+  phasesWidgetSchema,
+  tableWidgetSchema,
+  notesWidgetSchema,
+])
+
+export const workspaceWidgetsSchema = z.array(workspaceWidgetSchema)
 
 type WidgetRegistryEntry<TType extends WorkspaceWidgetType> = {
   type: TType

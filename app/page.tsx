@@ -624,7 +624,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* <section
+        <section
           id="open-source"
           className="mx-auto max-w-7xl px-4 py-20 md:px-6"
         >
@@ -650,7 +650,7 @@ export default function LandingPage() {
               <Button
                 asChild
                 size="lg"
-                className="h-12 border border-[#f6f1e8] bg-[#f6f1e8] px-6 text-zinc-950 hover:bg-zinc-200 rounded-sm"
+                className="h-12 rounded-none border border-[#f6f1e8] bg-[#f6f1e8] px-6 text-zinc-950 hover:bg-zinc-200"
               >
                 <Link
                   href="https://github.com/planwiki/planwiki-app"
@@ -664,7 +664,7 @@ export default function LandingPage() {
                 asChild
                 size="lg"
                 variant="outline"
-                className="h-12 border-[#f6f1e8] bg-transparent px-6 text-[#f6f1e8] hover:bg-white hover:text-zinc-950 rounded-sm"
+                className="h-12 rounded-none border-[#f6f1e8] bg-transparent px-6 text-[#f6f1e8] hover:bg-white hover:text-zinc-950"
               >
                 <Link
                   href="https://github.com/planwiki/planwiki-app#readme"
@@ -676,7 +676,7 @@ export default function LandingPage() {
               </Button>
             </div>
           </div>
-        </section> */}
+        </section>
 
         <footer className="mx-auto flex max-w-7xl items-center justify-between px-4 pb-10 pt-2 text-sm text-zinc-600 md:px-6">
           <p>© {new Date().getFullYear()} PlanWiki</p>

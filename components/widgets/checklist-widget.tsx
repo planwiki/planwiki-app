@@ -27,7 +27,7 @@ export function ChecklistWidget({
   const completed = data.items.filter((item) => item.done).length
 
   return (
-    <Card className="rounded-none border border-zinc-950/10 bg-white/70 py-0 shadow-none backdrop-blur-sm">
+    <Card className="rounded-none border border-zinc-950/10 bg-white py-0 shadow-none">
       <CardHeader className="border-b border-zinc-950/10 px-4 py-4 md:px-6 md:py-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-1">
@@ -49,7 +49,7 @@ export function ChecklistWidget({
         </div>
         <Progress
           value={completion}
-          className="mt-1 h-2 bg-[#ece4d7] [&_[data-slot=progress-indicator]]:bg-emerald-600"
+          className="mt-1 h-2 bg-emerald-100/80 [&_[data-slot=progress-indicator]]:bg-emerald-700"
         />
       </CardHeader>
       <CardContent className="px-4 py-4 md:px-6">
@@ -60,7 +60,7 @@ export function ChecklistWidget({
               className={`flex min-h-12 items-start gap-3 rounded-none border px-3 py-3 transition-all ${
                 item.done
                   ? "border-emerald-200 bg-emerald-50/70"
-                  : "border-zinc-950/10 bg-[#f7f2ea] hover:border-zinc-950/20 hover:bg-white"
+                  : "border-zinc-950/10 bg-white hover:bg-[#faf8f3]"
               }`}
             >
               <Checkbox
@@ -68,11 +68,13 @@ export function ChecklistWidget({
                 onCheckedChange={() =>
                   onChecklistItemToggle?.(data.id, item.id)
                 }
-                className="mt-0.5"
+                className="mt-0.5 border-zinc-950/20 data-checked:border-emerald-700 data-checked:bg-emerald-700"
               />
               <span
                 className={`text-sm leading-6 ${
-                  item.done ? "text-emerald-800 line-through" : "text-zinc-900"
+                  item.done
+                    ? "text-emerald-900 line-through"
+                    : "text-zinc-900"
                 }`}
               >
                 {item.text}

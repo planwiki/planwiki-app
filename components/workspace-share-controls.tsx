@@ -2,28 +2,26 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { Share2 } from "lucide-react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
 import { Switch } from "@/components/ui/switch"
+import { trpc } from "@/lib/trpc"
 
 interface WorkspaceShareControlsProps {
+  workspaceId: string
   slug: string
+  isPublic?: boolean
 }
 
 export function WorkspaceShareControls({
+  workspaceId,
   slug,
+  isPublic = false,
 }: WorkspaceShareControlsProps) {
-  const [copied, setCopied] = useState(false)
   const [origin, setOrigin] = useState("http://localhost:3000")
+  const [hasShared, setHasShared] = useState(isPublic)
+  const setWorkspaceVisibility = trpc.workspaces.setWorkspaceVisibility.useMutation()
 
   const sharedUrl = useMemo(() => {
     return `${origin}/workspaces/${slug}/shared/public`
@@ -35,76 +33,60 @@ export function WorkspaceShareControls({
     }
   }, [])
 
+  useEffect(() => {
+    setHasShared(isPublic)
+  }, [isPublic])
+
   const handleCopy = async () => {
     await navigator.clipboard.writeText(sharedUrl)
-    setCopied(true)
+    toast.success("Link copied")
+  }
 
-    window.setTimeout(() => {
-      setCopied(false)
-    }, 1500)
+  const handleVisibilityChange = async (checked: boolean) => {
+    setHasShared(checked)
+
+    try {
+      const result = await setWorkspaceVisibility.mutateAsync({
+        workspaceId,
+        isPublic: checked,
+      })
+
+      if (!result.success) {
+        setHasShared(!checked)
+        toast.error("We could not update sharing.")
+        return
+      }
+
+      setHasShared(result.data.isPublic)
+    } catch {
+      setHasShared(!checked)
+      toast.error("We could not update sharing.")
+    }
   }
 
   return (
-    <div className="flex items-center gap-2 self-start justify-self-start md:justify-self-end">
-      <Dialog>
-        <DialogTrigger asChild>
-          <Button
-            type="button"
-            className="h-10 rounded-none border-zinc-950 bg-zinc-950 px-4 text-[#f6f1e8] hover:bg-zinc-800"
-          >
-            <span>Share</span>
-            <Share2 className="size-4" />
-          </Button>
-        </DialogTrigger>
-
-        <DialogContent className="rounded-none border border-zinc-950/10 bg-[#f6f1e8] p-0 shadow-none ring-0">
-          <DialogHeader className="border-b border-zinc-950/10 px-5 py-5">
-            <DialogTitle className="text-lg font-semibold tracking-[-0.03em] text-zinc-950">
-              Share workspace
-            </DialogTitle>
-            <DialogDescription className="text-sm leading-6 text-zinc-600">
-              Publish a public link for this workspace and share it with other
-              people.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 px-5 py-5">
-            <div className="border border-zinc-950/10 bg-white px-4 py-3">
-              <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                Public URL
-              </p>
-              <p className="mt-2 break-all text-sm text-zinc-950">
-                {sharedUrl}
-              </p>
-            </div>
-
-            <div className="flex items-center justify-between gap-4 border border-zinc-950/10 bg-white px-4 py-3">
-              <div>
-                <p className="text-sm font-medium text-zinc-950">Public</p>
-                <p className="mt-1 text-xs text-zinc-500">
-                  Anyone with the link can view this workspace.
-                </p>
-              </div>
-              <Switch
-                checked
-                disabled
-                aria-label="Toggle public sharing"
-                className="border-zinc-950/20 data-[unchecked]:bg-white data-[checked]:bg-zinc-950"
-              />
-            </div>
-          </div>
-
-          <DialogFooter className="border-t border-zinc-950/10 px-5 py-4">
-            <Button
-              type="button"
-              onClick={handleCopy}
-              className="rounded-none border-zinc-950 bg-zinc-950 px-4 text-[#f6f1e8] hover:bg-zinc-800"
-            >
-              {copied ? "Copied" : "Copy link"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+    <div className="flex w-full flex-col gap-2 self-start justify-self-start sm:flex-row sm:items-center md:w-auto md:justify-self-end">
+      <div className="flex h-10 items-center justify-between border border-zinc-950/10 bg-[#f7f2ea] px-3 sm:min-w-36 sm:justify-start sm:gap-3">
+        <span className="text-xs uppercase tracking-[0.2em] text-zinc-600">
+          Public
+        </span>
+        <Switch
+          checked={hasShared}
+          onCheckedChange={(checked) => void handleVisibilityChange(checked)}
+          disabled={setWorkspaceVisibility.isPending}
+          aria-label="Toggle public sharing"
+          className="data-checked:bg-zinc-950"
+        />
+      </div>
+      <Button
+        type="button"
+        onClick={() => void handleCopy()}
+        disabled={!hasShared || setWorkspaceVisibility.isPending}
+        className="h-10 w-full rounded-none border-zinc-950 bg-zinc-950 px-4 text-[#f6f1e8] hover:bg-zinc-800 md:w-auto"
+      >
+        <span>Copy link</span>
+        <Share2 className="size-4" />
+      </Button>
     </div>
   )
 }

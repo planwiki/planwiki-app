@@ -8,14 +8,16 @@ import {
   type KeyboardEvent,
 } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 import { ArrowRight } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { Button } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
 import { WorkspaceWidgetRenderer } from "@/components/widgets/workspace-widget-renderer"
-import { generateWorkspaceFromPlan } from "@/lib/onboarding/generate-workspace-from-plan"
+import { trpc } from "@/lib/trpc"
 import type { WorkspaceWidget } from "@/lib/widgets/widget-registry"
 
 const samplePlans = [
@@ -80,37 +82,45 @@ Revision time: 2 hours per evening
   },
 ] as const
 
-const loadingStages = [
-  "Analyzing plan...",
-  "Generating widgets...",
-  "Building workspace...",
-]
+const MIN_PLAN_LENGTH = 50
 
 type WelcomeOnboardingProps = {
   userName?: string | null
   userEmail?: string | null
 }
 
+type GeneratedWorkspaceState = {
+  title: string
+  summary: string
+  widgets: WorkspaceWidget[]
+  workspaceId?: string
+  slug?: string
+}
+
 export function WelcomeOnboarding({
   userName,
   userEmail,
 }: WelcomeOnboardingProps) {
+  const router = useRouter()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [input, setInput] = useState("")
   const [selectedSampleId, setSelectedSampleId] = useState<
     (typeof samplePlans)[number]["id"] | null
   >(null)
-  const [phase, setPhase] = useState<"compose" | "loading" | "preview">(
-    "compose",
+  const [phase, setPhase] = useState<
+    "compose" | "loading" | "preview" | "error"
+  >("compose")
+  const [validationMessage, setValidationMessage] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [generated, setGenerated] = useState<GeneratedWorkspaceState | null>(
+    null,
   )
-  const [loadingIndex, setLoadingIndex] = useState(0)
-  const [generated, setGenerated] = useState<ReturnType<
-    typeof generateWorkspaceFromPlan
-  > | null>(null)
   const [widgets, setWidgets] = useState<WorkspaceWidget[]>([])
   const [selectedTableRows, setSelectedTableRows] = useState<
     Record<string, number[]>
   >({})
+
+  const generateWorkspace = trpc.workspaces.generateNewWorkspace.useMutation()
 
   useEffect(() => {
     const textarea = textareaRef.current
@@ -118,31 +128,6 @@ export function WelcomeOnboarding({
 
     textarea.style.height = "auto"
     textarea.style.height = `${Math.min(Math.max(textarea.scrollHeight, 200), 420)}px`
-  }, [input, phase])
-
-  useEffect(() => {
-    if (phase !== "loading") return
-
-    const stepMs = Math.floor(5000 / loadingStages.length)
-
-    const timers = loadingStages.map((_, index) =>
-      window.setTimeout(() => {
-        if (index < loadingStages.length - 1) {
-          setLoadingIndex(index + 1)
-          return
-        }
-
-        const nextGenerated = generateWorkspaceFromPlan(input.trim())
-        setGenerated(nextGenerated)
-        setWidgets(nextGenerated.widgets)
-        setSelectedTableRows({})
-        setPhase("preview")
-      }, (index + 1) * stepMs),
-    )
-
-    return () => {
-      timers.forEach((timer) => window.clearTimeout(timer))
-    }
   }, [input, phase])
 
   const rawUserName =
@@ -153,7 +138,10 @@ export function WelcomeOnboarding({
     )?.trim() || "there"
   const firstName = rawUserName.split(" ")[0] || "there"
 
-  const canGenerate = useMemo(() => input.trim().length > 0, [input])
+  const canGenerate = useMemo(
+    () => input.trim().length > 0 && !generateWorkspace.isPending,
+    [generateWorkspace.isPending, input],
+  )
 
   const handleSampleSelect = (sampleId: (typeof samplePlans)[number]["id"]) => {
     const sample = samplePlans.find((item) => item.id === sampleId)
@@ -161,22 +149,76 @@ export function WelcomeOnboarding({
 
     setSelectedSampleId(sampleId)
     setInput(sample.text)
+    setValidationMessage(null)
+    setErrorMessage(null)
+
+    if (phase === "error") {
+      setPhase("compose")
+    }
   }
 
-  const handleGenerate = () => {
-    if (!input.trim()) return
+  const handleGenerate = async () => {
+    const text = input.trim()
 
-    setLoadingIndex(0)
+    if (!text) return
+
+    if (text.length < MIN_PLAN_LENGTH) {
+      setValidationMessage(
+        "Your plan is too short. Paste more detail before generating a workspace.",
+      )
+      return
+    }
+
+    setValidationMessage(null)
+    setErrorMessage(null)
     setGenerated(null)
     setWidgets([])
     setSelectedTableRows({})
     setPhase("loading")
+
+    try {
+      const result = await generateWorkspace.mutateAsync({
+        text,
+        source: "welcome-onboarding",
+      })
+
+      if (!result.success) {
+        setErrorMessage(
+          "We could not assemble that workspace yet. Try again and paste a little more detail.",
+        )
+        setPhase("error")
+        return
+      }
+
+      const nextGenerated = {
+        ...result.data,
+        widgets: [...result.data.widgets].sort(
+          (left, right) => left.order - right.order,
+        ),
+      }
+
+      if (nextGenerated.slug) {
+        router.push(`/workspaces/${nextGenerated.slug}`)
+        router.refresh()
+        return
+      }
+
+      setGenerated(nextGenerated)
+      setWidgets(nextGenerated.widgets)
+      setSelectedTableRows({})
+      setPhase("preview")
+    } catch {
+      setErrorMessage(
+        "We could not assemble that workspace yet. Try again and paste a little more detail.",
+      )
+      setPhase("error")
+    }
   }
 
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
       event.preventDefault()
-      handleGenerate()
+      void handleGenerate()
     }
   }
 
@@ -213,10 +255,13 @@ export function WelcomeOnboarding({
 
   return (
     <main className="flex min-h-screen flex-col bg-[#f6f1e8]">
-      <section className="flex flex-1 justify-center px-4 py-10 md:px-6">
+      <section className="flex flex-1 justify-center px-4 py-8 sm:py-10 md:px-6">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
           <div className="animate-in fade-in slide-in-from-bottom-4 text-center duration-500 motion-reduce:animate-none">
-            <h1 className="mt-3 text-4xl font-semibold tracking-[-0.05em] text-zinc-950 md:text-6xl">
+            <p className="text-[11px] uppercase tracking-[0.28em] text-zinc-500">
+              Welcome
+            </p>
+            <h1 className="mt-3 text-4xl font-semibold tracking-[-0.05em] text-zinc-950 sm:text-5xl md:text-6xl">
               Try an example now
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-zinc-700 md:text-[15px]">
@@ -225,84 +270,115 @@ export function WelcomeOnboarding({
             </p>
           </div>
 
-          {phase === "compose" ? (
+          {phase === "compose" || phase === "error" ? (
             <div className="animate-in fade-in slide-in-from-bottom-5 mx-auto w-full max-w-5xl duration-500 motion-reduce:animate-none">
               <div className="border border-zinc-950/10 bg-[#f7f2ea] p-4 md:p-5">
-                <div className="border border-zinc-950/10 bg-white p-3 md:p-4">
-                <div className="flex flex-wrap gap-2 border-b border-zinc-950/10 pb-3">
-                  {samplePlans.map((sample) => {
-                    const isSelected = sample.id === selectedSampleId
+                <div
+                  className={`border border-zinc-950/10 p-3 md:p-4 ${
+                    phase === "error" ? "bg-[#fff7f4]" : "bg-white"
+                  }`}
+                >
+                  <div className="flex gap-2 overflow-x-auto border-b border-zinc-950/10 pb-3">
+                    {samplePlans.map((sample) => {
+                      const isSelected = sample.id === selectedSampleId
 
-                    return (
-                      <button
-                        key={sample.id}
-                        type="button"
-                        onClick={() => handleSampleSelect(sample.id)}
-                        className={`border px-3 py-2 text-xs uppercase tracking-[0.22em] transition-[transform,colors] duration-200 ease-out hover:-translate-y-0.5 motion-reduce:transition-none motion-reduce:hover:translate-y-0 ${
-                          isSelected
-                            ? "border-zinc-950 bg-zinc-950 text-[#f6f1e8]"
-                            : "border-zinc-950/10 bg-[#f7f2ea] text-zinc-600 hover:border-zinc-950 hover:bg-white hover:text-zinc-950"
-                        }`}
-                        style={{
-                          animationDelay: `${samplePlans.findIndex((item) => item.id === sample.id) * 80}ms`,
-                        }}
-                      >
-                        {sample.label}
-                      </button>
-                    )
-                  })}
-                </div>
+                      return (
+                        <button
+                          key={sample.id}
+                          type="button"
+                          onClick={() => handleSampleSelect(sample.id)}
+                          className={`shrink-0 border px-3 py-2 text-xs uppercase tracking-[0.22em] transition-[transform,colors] duration-200 ease-out hover:-translate-y-0.5 motion-reduce:transition-none motion-reduce:hover:translate-y-0 ${
+                            isSelected
+                              ? "border-zinc-950 bg-zinc-950 text-[#f6f1e8]"
+                              : "border-zinc-950/10 bg-[#f7f2ea] text-zinc-600 hover:border-zinc-950 hover:bg-white hover:text-zinc-950"
+                          }`}
+                        >
+                          {sample.label}
+                        </button>
+                      )
+                    })}
+                  </div>
 
-                <Textarea
-                  ref={textareaRef}
-                  value={input}
-                  onChange={(event) => setInput(event.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Pick a sample plan to load its AI-generated text."
-                  className="mt-3 min-h-52 resize-none rounded-none border-none bg-transparent px-0 py-0 text-base leading-7 text-zinc-800 shadow-none focus-visible:border-none focus-visible:ring-0 md:text-[15px]"
-                  aria-label="Onboarding plan input"
-                />
+                  <Textarea
+                    ref={textareaRef}
+                    value={input}
+                    onChange={(event) => {
+                      setInput(event.target.value)
+                      if (validationMessage) {
+                        setValidationMessage(null)
+                      }
+                      if (errorMessage) {
+                        setErrorMessage(null)
+                      }
+                      if (phase === "error") {
+                        setPhase("compose")
+                      }
+                    }}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Pick a sample plan to load its AI-generated text."
+                    className="mt-3 min-h-52 resize-none rounded-none border-none bg-transparent px-0 py-0 text-base leading-7 text-zinc-800 shadow-none focus-visible:border-none focus-visible:ring-0 md:text-[15px]"
+                    aria-label="Onboarding plan input"
+                  />
 
-                <div className="mt-3 flex flex-col gap-3 border-t border-zinc-950/10 pt-3 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="text-xs text-zinc-500">
-                    Pick a sample plan to inspect the raw AI text, then generate
-                    the workspace preview.
-                  </p>
-                  <Button
-                    type="button"
-                    onClick={handleGenerate}
-                    disabled={!canGenerate}
-                    className="h-10 rounded-none border-zinc-950 bg-zinc-950 px-4 text-[#f6f1e8] hover:bg-zinc-800"
-                  >
-                    Generate Workspace
-                  </Button>
+                  {validationMessage ? (
+                    <p className="mt-3 text-sm leading-6 text-[#8d3b28]">
+                      {validationMessage}
+                    </p>
+                  ) : null}
+
+                  {phase === "error" && errorMessage ? (
+                    <div className="mt-4 border border-[#d8b3a8] bg-[#fffdfb] px-4 py-4">
+                      <p className="text-sm leading-6 text-[#8d3b28]">
+                        {errorMessage}
+                      </p>
+                      <div className="mt-3">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setPhase("compose")
+                            setErrorMessage(null)
+                            setGenerated(null)
+                            setWidgets([])
+                            setSelectedTableRows({})
+                          }}
+                          className="h-10 rounded-none border-zinc-950/15 bg-white px-4 text-zinc-700 shadow-none hover:bg-[#f7f2ea]"
+                        >
+                          Try again
+                        </Button>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  <div className="mt-3 flex flex-col gap-3 border-t border-zinc-950/10 pt-3 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="max-w-md text-xs leading-6 text-zinc-500">
+                      Pick a sample plan to inspect the raw AI text, then generate
+                      the workspace preview.
+                    </p>
+                    <Button
+                      type="button"
+                      onClick={() => void handleGenerate()}
+                      disabled={!canGenerate}
+                      className="h-11 w-full rounded-none border-zinc-950 bg-zinc-950 px-4 text-[#f6f1e8] hover:bg-zinc-800 sm:w-auto"
+                    >
+                      Generate Workspace
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
             </div>
           ) : null}
 
           {phase === "loading" ? (
-            <div className="animate-in fade-in zoom-in-95 mx-auto grid w-full max-w-3xl gap-3 border border-zinc-950/10 bg-white/70 p-5 duration-300 motion-reduce:animate-none md:p-6">
-              {loadingStages.map((stage, index) => {
-                const isActive = index === loadingIndex
-                const isComplete = index < loadingIndex
-
-                return (
-                  <div
-                    key={stage}
-                    className={`border px-4 py-4 text-sm transition-[transform,colors,opacity] duration-300 ease-out motion-reduce:transition-none ${
-                      isActive
-                        ? "translate-x-1 border-zinc-950 bg-[#f7f2ea] text-zinc-950"
-                        : isComplete
-                          ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                          : "border-zinc-950/10 bg-white text-zinc-500"
-                    }`}
-                  >
-                    {stage}
-                  </div>
-                )
-              })}
+            <div className="animate-in fade-in slide-in-from-bottom-5 mx-auto w-full max-w-5xl duration-500 motion-reduce:animate-none">
+              <div className="border border-zinc-950/10 bg-[#f7f2ea] p-6 md:p-8">
+                <div className="flex flex-col items-center justify-center gap-4 border border-zinc-950/10 bg-white px-6 py-10 text-center md:py-14">
+                  <Spinner className="size-6 text-zinc-950" />
+                  <p className="text-sm leading-7 text-zinc-700 md:text-[15px]">
+                    Your workspace is being generated.
+                  </p>
+                </div>
+              </div>
             </div>
           ) : null}
 
@@ -321,16 +397,31 @@ export function WelcomeOnboarding({
                   </p>
                 </div>
 
-                <Button
-                  asChild
-                  size="lg"
-                  className="h-12 rounded-none border border-zinc-950 bg-zinc-950 px-6 text-[#f6f1e8] hover:bg-zinc-800"
-                >
-                  <Link href="/new">
-                    Proceed to Next Step
-                    <HugeiconsIcon icon={ArrowRight} className="size-4" />
-                  </Link>
-                </Button>
+                <div className="flex flex-col gap-3 sm:flex-row sm:self-start">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setPhase("compose")
+                      setValidationMessage(null)
+                      setErrorMessage(null)
+                    }}
+                    className="h-12 w-full rounded-none border-zinc-950/15 bg-[#f7f2ea] px-4 text-zinc-700 shadow-none hover:bg-white sm:w-auto"
+                  >
+                    Paste again
+                  </Button>
+
+                  <Button
+                    asChild
+                    size="lg"
+                    className="h-12 w-full rounded-none border border-zinc-950 bg-zinc-950 px-6 text-[#f6f1e8] hover:bg-zinc-800 sm:w-auto"
+                  >
+                    <Link href="/new">
+                      Open workspace
+                      <HugeiconsIcon icon={ArrowRight} className="size-4" />
+                    </Link>
+                  </Button>
+                </div>
               </div>
 
               <WorkspaceWidgetRenderer

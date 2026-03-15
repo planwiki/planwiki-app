@@ -56,6 +56,11 @@
       "sourceType": "github",
       "computedHash": "b01b8be227a2a094e4b65f340c5a767bdbfd27d8bf2ccee4f75c203e44a5a592"
     },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "computedHash": "d31e234f0c90694a670222cdd1dafa853e051d7066beda389f1097c22dadd461"
+    },
     "frontend-design": {
       "source": "pbakaus/impeccable",
       "sourceType": "github",
