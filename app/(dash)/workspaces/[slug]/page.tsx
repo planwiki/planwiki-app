@@ -9,6 +9,8 @@ import { findSampleWorkspaceBySlug } from "@/lib/widgets/sample-workspaces"
 import type { WorkspaceWidget } from "@/lib/widgets/widget-registry"
 import { eq } from "drizzle-orm"
 
+export const dynamic = "force-dynamic"
+
 const deriveSummaryFromWidgets = (widgets: WorkspaceWidget[]) => {
   const notesWidget = widgets.find((widget) => widget.type === "notes")
 
@@ -34,7 +36,8 @@ export default async function WorkspaceDetailPage({
   })
 
   if (workspace) {
-    const canView = workspace.isPublic || session?.user?.id === workspace.userId
+    const canView =
+      Boolean(workspace.isPublic) || session?.user?.id === workspace.userId
 
     if (!canView) {
       notFound()

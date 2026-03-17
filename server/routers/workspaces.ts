@@ -120,12 +120,19 @@ export const workspacesRouter = router({
         slug: z.string(),
       }),
     )
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
       const workspace = await db.query.workspaces.findFirst({
         where: eq(workspaces.slug, input.slug),
       });
 
       if (!workspace) {
+        return null;
+      }
+
+      const canView =
+        Boolean(workspace.isPublic) || workspace.userId === ctx.user?.id;
+
+      if (!canView) {
         return null;
       }
 
