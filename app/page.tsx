@@ -5,171 +5,95 @@ import { useEffect, useState } from "react";
 import { ArrowRight } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { LandingNav } from "@/components/landing-nav";
 import { Button } from "@/components/ui/button";
 import { ModelMarquee } from "@/components/ui/marquee";
 import PricingCards from "@/components/ui/pricing-cards";
+import { authClient } from "@/lib/auth/client";
 
 const demoExamples = [
   {
-    id: "roadmap",
-    label: "Roadmap",
-    title: "Q3 Collaboration Workspace Rollout",
+    id: "delivery",
+    label: "Food Delivery",
+    title: "Food Delivery App Launch Plan",
     plan: [
-      "Week 1 — Align product, design, and engineering on the workspace collaboration problem and target users.",
-      "Week 2 — Finalize the PRD, define agent workflows, and capture success metrics for activation and adoption.",
-      "Week 3 — Break the rollout into onboarding, permissions, widget execution, and agent connectivity milestones.",
-      "Week 4 — Ship the first release to an internal beta, collect issues, and document follow-up work.",
-      "Week 5 — Prepare launch messaging, customer feedback loops, and post-launch iteration rituals.",
+      "Week 1 — Onboard 10 restaurants, define rider zones, and finalize the customer ordering flow.",
+      "Week 2 — Ship restaurant dashboard basics, rider assignment flow, and live order tracking.",
+      "Week 3 — Run a pilot in one neighborhood, collect rider and restaurant feedback, and fix delivery bottlenecks.",
+      "Core features — Menu management, rider assignment, live map tracking, customer order status, and restaurant payouts.",
+      "Success metrics — First 100 orders, average delivery time under 35 minutes, repeat order rate above 20%.",
     ],
     widget: {
-      title: "Workspace Rollout Board",
-      subtitle: "A roadmap converted into execution blocks for product teams and agents.",
-      content: (
-        <div className="grid gap-3 md:grid-cols-2">
-          {[
-            ["Sprint 1", "Problem framing", "Done"],
-            ["Sprint 2", "PRD and metrics", "In progress"],
-            ["Sprint 3", "Agent workflows", "Ready"],
-            ["Sprint 4", "Beta launch", "Queued"],
-          ].map(([lane, task, state]) => (
-            <button
-              key={task}
-              type="button"
-              className="cursor-pointer rounded-sm border border-zinc-950/10 bg-white p-4 text-left transition-all hover:-translate-y-0.5 hover:border-zinc-950 hover:shadow-[4px_4px_0_0_rgba(24,24,27,0.12)]"
-            >
-              <p className="text-xs uppercase tracking-[0.24em] text-zinc-500">
-                {lane}
-              </p>
-              <p className="mt-2 text-base font-medium text-zinc-950">{task}</p>
-              <p className="mt-2 text-sm text-zinc-600">{state}</p>
-            </button>
-          ))}
-        </div>
-      ),
+      title: "Delivery Launch Workspace",
+      subtitle: "Launch tasks, owners, and live execution status in one place.",
     },
   },
   {
-    id: "spec",
-    label: "PRD",
-    title: "AI Agent Handoff Product Spec",
+    id: "restaurant",
+    label: "Restaurant SaaS",
+    title: "Restaurant Operations SaaS PRD",
     plan: [
-      "Goal: give product teams a shared workspace where agents can pick up scoped execution work safely.",
-      "User flow: paste a long plan, detect structure, convert it into widgets, assign follow-up actions, and share it with teammates.",
-      "Key requirements: versioned updates, editable widgets, public/private sharing, and agent connection setup.",
-      "Risks: unclear ownership, low trust in AI output, and weak visibility across roadmap execution.",
-      "Success metrics: time to first workspace, number of active widgets, and agent-assisted task completion.",
+      "Goal — Build a lightweight operations tool for small restaurants to manage inventory, staff shifts, and daily sales in one place.",
+      "Requirement 1 — Restaurant owners can track stock levels and low-inventory alerts.",
+      "Requirement 2 — Managers can assign and edit staff shifts from mobile.",
+      "Requirement 3 — Daily sales summaries should be visible by location and time period.",
+      "Requirement 4 — The system should support owner, manager, and staff roles.",
+      "Success metrics — Weekly active locations, shift completion rate, and reduction in stockout incidents.",
     ],
     widget: {
-      title: "Spec Breakdown",
-      subtitle: "Requirements, risks, and outcomes split into reviewable sections.",
-      content: (
-        <div className="space-y-3 text-sm text-zinc-700">
-          <div className="flex items-end justify-between border-b border-zinc-900/10 pb-3">
-            <div>
-              <p className="text-xs uppercase tracking-[0.24em] text-zinc-500">
-                Primary outcome
-              </p>
-              <p className="mt-1 text-2xl font-semibold text-zinc-950">
-                Agent-ready execution
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="text-xs uppercase tracking-[0.24em] text-zinc-500">
-                Shared with
-              </p>
-              <p className="mt-1 text-lg font-medium text-emerald-700">
-                Shared with product
-              </p>
-            </div>
-          </div>
-          <div className="space-y-2">
-            {[
-              ["Problem statement", "Defined"],
-              ["Success metrics", "Tracked"],
-              ["Agent workflow", "Mapped"],
-              ["Risks", "Reviewed"],
-              ["Rollout", "Sequenced"],
-            ].map(([label, value]) => (
-              <button
-                key={label}
-                type="button"
-                className="grid w-full cursor-pointer grid-cols-[1fr_auto] gap-3 border border-transparent px-2 py-1 text-left transition-colors hover:border-zinc-950/10 hover:bg-zinc-50"
-              >
-                <span>{label}</span>
-                <span className="font-medium text-zinc-950">{value}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      ),
+      title: "Restaurant Ops Workspace",
+      subtitle:
+        "Requirements converted into scoped sections the team can review.",
     },
   },
   {
-    id: "launch",
-    label: "Launch",
-    title: "Product Launch Coordination Plan",
+    id: "booking",
+    label: "Booking App",
+    title: "Service Booking Marketplace Plan",
     plan: [
-      "Phase 1 — Lock scope, confirm launch owner, and define the support plan for the first rollout window.",
-      "Phase 2 — Coordinate release notes, marketing copy, internal enablement, and agent operating instructions.",
-      "Phase 3 — Track launch blockers, feedback, and follow-up items in one shared execution workspace.",
-      "Phase 4 — Review outcomes with the team and feed learnings back into the next roadmap cycle.",
+      "Phase 1 — Recruit the first 50 service providers, define service categories, and set booking rules.",
+      "Phase 2 — Build provider profiles, booking slots, and customer payments.",
+      "Phase 3 — Launch in one city, monitor cancellations, and improve provider response times.",
+      "Core features — Provider profiles, availability calendar, customer checkout, reviews, booking confirmation, and support chat.",
+      "Target metrics — 200 completed bookings in month one, provider acceptance rate above 75%, customer rating above 4.5.",
     ],
     widget: {
-      title: "Launch Coordination Workspace",
-      subtitle: "Cross-functional launch steps made visible for teams and agents.",
-      content: (
-        <div className="space-y-3 text-sm text-zinc-700">
-          {[
-            ["Phase 1", "Scope lock", true],
-            ["Phase 2", "Enablement", true],
-            ["Phase 3", "Launch monitoring", false],
-            ["Phase 4", "Post-launch review", false],
-          ].map(([day, task, done]) => (
-            <button
-              key={String(day)}
-              type="button"
-              className="grid w-full cursor-pointer grid-cols-[auto_1fr_auto] items-center gap-3 border-b border-zinc-900/10 pb-3 text-left transition-colors hover:bg-white/60 last:border-b-0 last:pb-0"
-            >
-              <span className="rounded-sm border border-zinc-950 bg-[#f6f1e8] px-2 py-1 text-[10px] uppercase tracking-[0.24em] text-zinc-600">
-                {day}
-              </span>
-              <span
-                className={
-                  done ? "text-zinc-500 line-through" : "text-zinc-950"
-                }
-              >
-                {task}
-              </span>
-              <span className={done ? "text-emerald-700" : "text-amber-700"}>
-                {done ? "done" : "next"}
-              </span>
-            </button>
-          ))}
-        </div>
-      ),
+      title: "Marketplace Launch Workspace",
+      subtitle:
+        "A launch plan turned into phases with status and next actions.",
     },
   },
 ];
 
 const features = [
-  "Roadmaps into widgets",
-  "PRDs into execution views",
-  "Agent connection setup",
-  "Shared team workspaces",
-  "Open source and self-hostable",
+  "Roadmaps broken into phases and milestones your team can track",
+  "PRDs turned into structured execution views agents can read and act on",
+  "Connect your agents via MCP no manual task setup required",
+  "Shared workspaces where your team and agents work from the same source of truth",
+  "Open source and self-hostable run it yourself in minutes",
 ];
 
 export default function LandingPage() {
+  const router = useRouter();
+  const { data: session, isPending: isSessionPending } =
+    authClient.useSession();
   const [showHeader, setShowHeader] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeDemo, setActiveDemo] = useState(0);
-  const [selectedRoadmapTask, setSelectedRoadmapTask] =
-    useState("PRD and metrics");
-  const [selectedSpecSection, setSelectedSpecSection] =
-    useState("Success metrics");
-  const [selectedLaunchStep, setSelectedLaunchStep] = useState("Launch monitoring");
+  const [selectedSprintTask, setSelectedSprintTask] =
+    useState("Rider assignment flow");
+  const [selectedPrdSection, setSelectedPrdSection] =
+    useState("Staff scheduling");
+  const [selectedLaunchStep, setSelectedLaunchStep] =
+    useState("City launch");
+
+  useEffect(() => {
+    if (!isSessionPending && session?.user) {
+      router.replace("/workspaces");
+    }
+  }, [isSessionPending, router, session]);
 
   useEffect(() => {
     let lastScrollY = 0;
@@ -206,14 +130,13 @@ export default function LandingPage() {
       <main className="relative z-10">
         <section className="mx-auto flex min-h-screen max-w-7xl flex-col justify-center px-4 pb-10 pt-28 md:px-6 md:pb-12 md:pt-36">
           <div className="max-w-4xl">
-            <h1 className="max-w-5xl text-5xl font-semibold tracking-[-0.05em] text-zinc-950 sm:text-6xl md:text-7xl lg:text-8xl">
+            <h1 className="max-w-5xl text-4xl font-semibold tracking-[-0.05em] text-zinc-950 sm:text-5xl md:text-6xl lg:text-7xl">
               AI-Native Workspace for Agents and Product Teams
             </h1>
             <p className="mt-8 max-w-2xl text-lg leading-8 text-zinc-700 md:text-xl">
-              PlanWiki is an open source workspace for product teams and AI
+              PlanWiki is an open source platform for product teams and AI
               agents. Paste long AI-generated plans, roadmaps, or ideas to turn
-              them into interactive widgets your team and agents can execute
-              together.
+              them into interactive widgets your team and agents can execute.
             </p>
           </div>
 
@@ -236,16 +159,16 @@ export default function LandingPage() {
           <div className="mt-12 grid gap-4 md:grid-cols-3">
             {[
               [
-                "Input",
-                "Paste long product plans, PRDs, roadmaps, launch docs, or messy AI-generated strategy notes.",
+                "Paste",
+                "Drop a feature spec, sprint plan, or project brief from any AI. Claude, ChatGPT, Gemini or any other AI Generated Output.",
               ],
               [
-                "Transform",
-                "PlanWiki breaks them into widgets, execution views, and reviewable sections your team can actually use.",
+                "Structure",
+                "PlanWiki breaks it into tasks, phases, and execution views your team can review and agents can act on immediately.",
               ],
               [
-                "Operate",
-                "Your workspace becomes a shared operating surface for product teams and connected AI agents.",
+                "Execute",
+                "Assign tasks to your AI Agents via MCP. Track progress in real time. No time to manually create boards, tickets, or project setups — just start working.",
               ],
             ].map(([title, copy]) => (
               <div
@@ -269,15 +192,14 @@ export default function LandingPage() {
                   Connect your agents
                 </p>
                 <p className="mt-3 max-w-md text-lg leading-8 text-zinc-700">
-                  Bring plans from any model, then connect the agents and tools
-                  that help your team move the work forward inside one workspace.
+                  Paste a plan from any AI, connect your agents via MCP, and
+                  move faster from planning to execution all in one workspace.
                 </p>
               </div>
               <ModelMarquee />
             </div>
           </div>
         </section>
-
         <section id="demo" className="text-zinc-950">
           <div className="mx-auto max-w-7xl px-4 py-14 md:px-6 md:py-16">
             <div className="max-w-3xl">
@@ -285,9 +207,9 @@ export default function LandingPage() {
                 Paste the plan. Run the workspace.
               </h2>
               <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-700">
-                Long product plans are useful until nobody can execute them.
-                PlanWiki turns them into structured blocks your team and agents
-                can inspect, update, and act on together.
+                Sprints, PRDs, and launch plans become structured workspaces
+                your team and agents can review, assign, and execute
+                immediately.
               </p>
             </div>
 
@@ -340,132 +262,181 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <article
-                className="overflow-hidden rounded-sm border border-zinc-950/10 bg-[#f7f2ea] p-5 text-zinc-950 md:p-8"
-              >
+              <article className="overflow-hidden rounded-sm border border-zinc-950/10 bg-[#f7f2ea] p-5 text-zinc-950 md:p-8">
                 <p className="text-xs uppercase tracking-[0.32em] text-zinc-600">
                   To this
                 </p>
                 <h3 className="mt-4 text-3xl font-semibold tracking-[-0.04em]">
                   {currentDemo.widget.title}
                 </h3>
-                {currentDemo.widget.subtitle ? (
-                  <p className="mt-3 text-base leading-7 text-zinc-700">
-                    {currentDemo.widget.subtitle}
-                  </p>
-                ) : null}
+                <p className="mt-3 text-base leading-7 text-zinc-700">
+                  {currentDemo.widget.subtitle}
+                </p>
                 <div className="mt-6 rounded-sm border border-zinc-950/10 bg-white p-4 md:p-5">
                   {activeDemo === 0 ? (
                     <div className="grid gap-3 md:grid-cols-2">
                       {[
-                        ["Day 1", "Project setup", "Done"],
-                        ["Day 2", "Workspace system", "In progress"],
-                        ["Day 4", "Plan parser", "Blocked"],
-                        ["Day 7", "Sharing", "Queued"],
-                      ].map(([lane, task, state]) => {
-                        const isSelected = selectedRoadmapTask === task;
+                        [
+                          "Task 1",
+                          "Restaurant onboarding",
+                          "done",
+                          "Ops lead",
+                        ],
+                        [
+                          "Task 2",
+                          "Rider assignment flow",
+                          "running",
+                          "Product",
+                        ],
+                        [
+                          "Task 3",
+                          "Live order tracking",
+                          "running",
+                          "Engineering",
+                        ],
+                        ["Task 4", "Pilot checklist", "queued", "Unassigned"],
+                      ].map(([tag, task, state, agent]) => {
+                        const isSelected = selectedSprintTask === task;
+                        const stateColor =
+                          state === "done"
+                            ? "text-emerald-700"
+                            : state === "running"
+                              ? "text-amber-700"
+                              : "text-zinc-400";
 
                         return (
                           <button
                             key={task}
                             type="button"
-                            onClick={() => setSelectedRoadmapTask(String(task))}
+                            onClick={() => setSelectedSprintTask(String(task))}
                             className={`cursor-pointer rounded-sm border p-4 text-left transition-all hover:-translate-y-0.5 ${
                               isSelected
                                 ? "border-emerald-700 bg-emerald-50"
                                 : "border-zinc-950/10 hover:border-zinc-950 hover:shadow-[4px_4px_0_0_rgba(24,24,27,0.12)]"
                             }`}
                           >
-                            <div className="flex items-start justify-between gap-3">
-                              <div>
-                                <p className="text-xs uppercase tracking-[0.24em] text-zinc-500">
-                                  {lane}
-                                </p>
-                                <p className="mt-2 text-base font-medium text-zinc-950">
-                                  {task}
-                                </p>
-                              </div>
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="text-xs uppercase tracking-[0.24em] text-zinc-500">
+                                {tag}
+                              </p>
                               <span
-                                className={`mt-1 h-3 w-3 rounded-sm border ${
-                                  isSelected
-                                    ? "border-emerald-700 bg-emerald-700"
-                                    : "border-zinc-950 bg-transparent"
+                                className={`text-[10px] uppercase tracking-[0.2em] ${stateColor}`}
+                              >
+                                {state}
+                              </span>
+                            </div>
+                            <p className="mt-2 text-sm font-medium text-zinc-950">
+                              {task}
+                            </p>
+                            <div className="mt-3 flex items-center gap-1.5">
+                              <span
+                                className={`h-1.5 w-1.5 rounded-full ${
+                                  agent === "Unassigned"
+                                    ? "bg-zinc-300"
+                                    : "bg-emerald-500"
                                 }`}
                               />
+                              <span className="text-xs text-zinc-500">
+                                {agent}
+                              </span>
                             </div>
-                            <p className="mt-2 text-sm text-zinc-600">
-                              {state}
-                            </p>
                           </button>
                         );
                       })}
                     </div>
-                  ) : activeDemo === 1 ? (
+                  ) : null}
+
+                  {activeDemo === 1 ? (
                     <div className="space-y-3 text-sm text-zinc-700">
                       <div className="flex items-end justify-between border-b border-zinc-900/10 pb-3">
                         <div>
                           <p className="text-xs uppercase tracking-[0.24em] text-zinc-500">
-                            Primary outcome
+                            Spec
                           </p>
-                          <p className="mt-1 text-2xl font-semibold text-zinc-950">
-                            Agent-ready execution
+                          <p className="mt-1 text-xl font-semibold text-zinc-950">
+                            Restaurant Ops
                           </p>
                         </div>
                         <div className="text-right">
                           <p className="text-xs uppercase tracking-[0.24em] text-zinc-500">
-                            Focus
+                            Viewing
                           </p>
-                          <p className="mt-1 text-lg font-medium text-zinc-950">
-                            {selectedSpecSection}
+                          <p className="mt-1 max-w-[130px] truncate text-sm font-medium text-zinc-950">
+                            {selectedPrdSection}
                           </p>
                         </div>
                       </div>
                       <div className="space-y-2">
                         {[
-                          ["Infrastructure", "$45/mo"],
-                          ["Domain + branding", "$82"],
-                          ["AI processing", "$100"],
-                          ["Marketing", "$200"],
-                          ["Misc", "$150"],
-                        ].map(([label, value]) => {
-                          const isSelected = selectedSpecSection === label;
+                          ["R1", "Inventory tracking", "Low-stock alerts"],
+                          ["R2", "Staff scheduling", "Mobile shift editing"],
+                          ["R3", "Sales summaries", "By location and time"],
+                          ["R4", "Role access", "Owner / manager / staff"],
+                          ["-", "Later", "Supplier reminders"],
+                        ].map(([tag, label, detail]) => {
+                          const isSelected = selectedPrdSection === label;
+                          const isOutOfScope = tag === "-";
 
                           return (
                             <button
                               key={label}
                               type="button"
                               onClick={() =>
-                                setSelectedSpecSection(String(label))
+                                setSelectedPrdSection(String(label))
                               }
-                            className={`grid w-full cursor-pointer grid-cols-[1fr_auto] gap-3 rounded-sm border px-2 py-2 text-left transition-colors ${
+                              className={`grid w-full cursor-pointer grid-cols-[auto_1fr_auto] items-center gap-3 rounded-sm border px-3 py-2 text-left transition-colors ${
                                 isSelected
                                   ? "border-emerald-700 bg-emerald-700 text-white"
                                   : "border-transparent bg-white hover:border-zinc-950/10 hover:bg-zinc-50"
                               }`}
                             >
-                              <span>{label}</span>
                               <span
-                                className={
+                                className={`text-[10px] uppercase tracking-[0.2em] ${
+                                  isSelected
+                                    ? "text-emerald-100"
+                                    : isOutOfScope
+                                      ? "text-zinc-300"
+                                      : "text-zinc-400"
+                                }`}
+                              >
+                                {tag}
+                              </span>
+                              <span
+                                className={`text-sm ${
                                   isSelected
                                     ? "font-medium text-white"
-                                    : "font-medium text-zinc-950"
-                                }
+                                    : isOutOfScope
+                                      ? "text-zinc-400 line-through"
+                                      : "text-zinc-800"
+                                }`}
                               >
-                                {value}
+                                {label}
+                              </span>
+                              <span
+                                className={`text-xs ${
+                                  isSelected
+                                    ? "text-emerald-100"
+                                    : "text-zinc-400"
+                                }`}
+                              >
+                                {detail}
                               </span>
                             </button>
                           );
                         })}
                       </div>
                     </div>
-                  ) : (
+                  ) : null}
+
+                  {activeDemo === 2 ? (
                     <div className="space-y-3 text-sm text-zinc-700">
                       {[
-                        ["Day 1", "Idea validation", true],
-                        ["Day 1", "Product definition", true],
-                        ["Week 1", "Build MVP", false],
-                        ["Launch", "Distribution", false],
-                      ].map(([day, task, done]) => {
+                        ["Prep", "Provider recruitment", true],
+                        ["Build", "Booking and payments", true],
+                        ["Launch", "City launch", false],
+                        ["Ops", "Cancellation review", false],
+                        ["Growth", "Provider response time", false],
+                      ].map(([phase, task, done]) => {
                         const isSelected = selectedLaunchStep === task;
 
                         return (
@@ -484,7 +455,7 @@ export default function LandingPage() {
                                   : "border-zinc-950 bg-[#f6f1e8] text-zinc-600"
                               }`}
                             >
-                              {day}
+                              {phase}
                             </span>
                             <span
                               className={
@@ -496,7 +467,9 @@ export default function LandingPage() {
                               {task}
                             </span>
                             <span
-                              className={done ? "text-emerald-700" : "text-zinc-600"}
+                              className={
+                                done ? "text-emerald-700" : "text-zinc-600"
+                              }
                             >
                               {isSelected ? "open" : done ? "done" : "next"}
                             </span>
@@ -504,45 +477,22 @@ export default function LandingPage() {
                         );
                       })}
                     </div>
-                  )}
+                  ) : null}
                 </div>
               </article>
             </div>
-
-            <div className="mt-8 flex flex-col gap-4 rounded-sm border border-zinc-950/10 bg-[#f7f2ea] p-5 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:p-6">
-              <div>
-                <p className="text-xs uppercase tracking-[0.32em] text-zinc-500">
-                  Demo workspace
-                </p>
-                <p className="mt-3 max-w-sm text-lg leading-7 text-zinc-700">
-                  See how a product development plan becomes a workspace your
-                  team and agents can execute together.
-                </p>
-              </div>
-              <Button
-                asChild
-                size="lg"
-                className="h-12 rounded-sm border border-zinc-950 bg-zinc-950 px-6 text-white hover:bg-zinc-800"
-              >
-                <Link href="/login">
-                  Open Demo Workspace
-                  <HugeiconsIcon
-                    icon={ArrowRight}
-                    className="ml-2 h-5 w-5 transition-transform group-hover/button:translate-x-1"
-                  />
-                </Link>
-              </Button>
-            </div>
           </div>
         </section>
-
-        <section id="features" className="mx-auto max-w-7xl px-4 py-14 md:px-6 md:py-16">
+        <section
+          id="features"
+          className="mx-auto max-w-7xl px-4 py-14 md:px-6 md:py-16"
+        >
           <div className="max-w-3xl">
             <p className="text-xs uppercase tracking-[0.32em] text-zinc-500">
               Features
             </p>
             <h2 className="mt-4 text-4xl font-semibold tracking-[-0.05em] md:text-6xl">
-              Built for product development work
+              Built for the moment after the plan lands
             </h2>
           </div>
 
@@ -558,18 +508,23 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section id="pricing" className="mx-auto max-w-7xl px-4 py-20 md:px-6">
-          <div className="grid gap-10 md:grid-cols-[0.75fr_1.25fr]">
-            <div>
-              <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-zinc-950 md:text-5xl">
-                Choose the right plan for your team
-              </h2>
-              <p className="mt-5 max-w-md text-lg leading-8 text-zinc-700">
-                Every pasted plan becomes a workspace. Use PlanWiki to align
-                product, design, engineering, and connected agents around the
-                same execution surface.
-              </p>
-            </div>
+        <section
+          id="pricing"
+          className="mx-auto max-w-7xl px-4 py-16 md:px-6 md:py-20"
+        >
+          <div className="max-w-3xl">
+            <p className="text-xs uppercase tracking-[0.32em] text-zinc-500">
+              Pricing
+            </p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-zinc-950 md:text-5xl">
+              Choose the right plan for your team
+            </h2>
+            <p className="mt-4 max-w-2xl text-base leading-7 text-zinc-700 md:text-lg md:leading-8">
+              Start free, add more agents when the work gets real, and move to
+              team access when execution stops being a solo workflow.
+            </p>
+          </div>
+          <div className="mt-10">
             <PricingCards />
           </div>
         </section>
@@ -582,20 +537,21 @@ export default function LandingPage() {
             <div className="grid gap-10 md:grid-cols-[0.9fr_1.1fr]">
               <div>
                 <h2 className="max-w-2xl text-3xl font-semibold tracking-[-0.04em] text-zinc-950 md:text-5xl">
-                  Built for product teams working with AI
+                  Built for teams that move from planning to execution fast
                 </h2>
                 <p className="mt-5 max-w-xl text-lg leading-8 text-zinc-700">
-                  Use PlanWiki when your team already thinks with AI, but still
-                  needs a shared place to organize, review, and execute the work.
+                  Your AI already generates the plan. PlanWiki makes sure it
+                  does not die in a chat window it becomes a workspace your team
+                  and agents can execute from the moment it lands.
                 </p>
               </div>
-              <div className="grid gap-px border border-zinc-950 bg-zinc-950">
+              <div className="grid gap-px rounded-sm border border-zinc-950 bg-zinc-950">
                 {[
-                  "Product roadmaps",
-                  "PRDs and specifications",
-                  "Launch coordination",
-                  "Backlog shaping",
-                  "Cross-functional planning",
+                  "Product roadmaps turned into trackable phases and milestones",
+                  "PRDs and specs structured into execution views agents can read and act on",
+                  "Launch coordination broken into assignable tasks with clear ownership",
+                  "Backlog shaping that goes straight from AI output to prioritised widget",
+                  "Cross-functional plans your whole team works from without rebuilding anything",
                 ].map((item) => (
                   <div
                     key={item}
@@ -605,20 +561,6 @@ export default function LandingPage() {
                   </div>
                 ))}
               </div>
-            </div>
-            <div className="mt-8 grid gap-4 md:grid-cols-3">
-              {[
-                "Product teams collecting long AI plans that need structure before execution",
-                "Operators who want agents and humans working from the same source of truth",
-                "Teams that need workspaces they can review, edit, and share without rewriting everything",
-              ].map((item) => (
-                <div
-                  key={item}
-                  className="rounded-sm border border-zinc-950/10 bg-white p-5 text-base leading-7 text-zinc-900"
-                >
-                  {item}
-                </div>
-              ))}
             </div>
           </div>
         </section>
@@ -637,7 +579,8 @@ export default function LandingPage() {
               </h2>
               <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-300">
                 Inspect the code, contribute improvements, and self-host if your
-                team needs full control over how workspaces and agents are set up.
+                team needs full control over how workspaces and agents are set
+                up.
               </p>
               <div className="mt-8 grid gap-3 text-sm uppercase tracking-[0.24em] text-zinc-400 sm:grid-cols-3">
                 <span>Inspect the code</span>

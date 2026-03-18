@@ -1,9 +1,9 @@
 "use client";
 
 import {
-  ArrowRight01Icon,
   Cancel01Icon,
   Delete02Icon,
+  SentIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useState } from "react";
@@ -50,10 +50,10 @@ export function WorkspaceChatSidebar({
   };
 
   const suggestions = [
-    "Turn this roadmap into execution widgets.",
-    "Break this PRD into milestones and follow-up tasks.",
-    "Summarize the launch plan for product, design, and engineering.",
-    "Identify the next actions an agent can pick up safely.",
+    "Add more tasks related to this plan.",
+    "Remove anything that feels duplicated.",
+    "Make this clearer for execution.",
+    "Break this into smaller next steps.",
   ];
 
   return (
@@ -126,26 +126,26 @@ export function WorkspaceChatSidebar({
             onSubmit={async (_message) => {
               await handleSubmit();
             }}
-            className="relative flex flex-col rounded-sm border  bg-zinc-100 p-4 pt-3 pb-3 transition-all focus-within:border-zinc-950/20"
+            className="relative flex flex-col rounded-sm bg-white border border-zinc-950/10 shadow-sm focus-within:ring-1 focus-within:ring-zinc-950 focus-within:border-zinc-950 transition-all"
           >
             <PromptInputTextarea
               value={input}
               onChange={(event) => setInput(event.target.value)}
               disabled={isPending}
               placeholder="Describe how you want to update this workspace."
-              className="min-h-44 w-full resize-none rounded-sm border-none ring-0 bg-transparent p-0 text-[15px] leading-7 text-zinc-700 placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-0 shadow-none md:min-h-56"
+              className="min-h-28 w-full resize-none rounded-sm border-none bg-transparent p-3 pb-12 text-[15px] leading-7 text-zinc-700 placeholder:text-zinc-500 shadow-none ring-0 focus-visible:outline-none focus-visible:ring-0 md:min-h-32"
             />
-            <div className="mt-3 flex flex-row items-center justify-between">
-              <span className="text-sm text-zinc-500">{input.length} characters</span>
+            <div className="absolute bottom-2 right-2">
               <Button
                 type="submit"
+                size="icon"
                 disabled={isPending || !input.trim()}
-                className="h-8 w-8 rounded-sm border-none bg-zinc-950 p-0 text-white shadow-none hover:bg-zinc-800 disabled:opacity-50 shrink-0"
+                className="h-8 w-8 rounded-sm bg-zinc-950 text-white shadow-none hover:bg-zinc-800 disabled:opacity-50"
               >
                 {isPending ? (
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-transparent border-t-white" />
                 ) : (
-                  <HugeiconsIcon icon={ArrowRight01Icon} className="size-4" />
+                  <HugeiconsIcon icon={SentIcon} className="size-4" />
                 )}
               </Button>
             </div>

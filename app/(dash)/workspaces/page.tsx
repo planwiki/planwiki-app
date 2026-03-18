@@ -79,7 +79,7 @@ export default async function WorkspacesPage() {
                         <Badge
                           key={widget.id}
                           variant="outline"
-                          className="border-zinc-950/10 bg-[#f7f2ea] text-zinc-600"
+                          className="rounded-sm border-zinc-950/10 bg-[#f7f2ea] text-zinc-600"
                         >
                           {widget.type}
                         </Badge>

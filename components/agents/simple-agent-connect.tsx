@@ -19,7 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type ProviderId = "cursor" | "codex" | "claude-code";
 
-type ApiKeyRecord = {
+export type ApiKeyRecord = {
   id: string;
   name: string;
   apiKey: string;

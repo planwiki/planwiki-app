@@ -1,6 +1,6 @@
 ---
 name: square-corners
-description: Enforce PlanWiki's updated UI shape language: shared `components/ui` primitives default to `rounded-sm`, while composed workspace surfaces, widgets, badges, cards, and controls stay `rounded-none` unless the user explicitly asks for more rounding.
+description: Enforce PlanWiki's updated UI shape language shared `components/ui` primitives default to `rounded-sm`, while composed workspace surfaces, widgets, badges, cards, and controls stay `rounded-none` unless the user explicitly asks for more rounding.
 ---
 
 Apply this skill when building or restyling PlanWiki UI.

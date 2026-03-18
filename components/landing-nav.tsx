@@ -1,7 +1,11 @@
 "use client";
 
+import { GridViewIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { authClient } from "@/lib/auth/client";
+import { cn } from "@/lib/utils";
 import logo from "@/public/logo.png";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,10 +14,29 @@ interface LandingNavProps {
   showLogo?: boolean;
 }
 
+const avatarColors = [
+  "bg-rose-500",
+  "bg-sky-500",
+  "bg-emerald-500",
+  "bg-amber-500",
+  "bg-fuchsia-500",
+  "bg-cyan-500",
+];
+
+function getAvatarColor(name: string) {
+  return (
+    avatarColors[name.charCodeAt(0) % avatarColors.length] ?? avatarColors[0]
+  );
+}
+
 export function LandingNav({ showLogo = true }: LandingNavProps) {
   const { data: session, isPending } = authClient.useSession();
-  const primaryHref = session?.user ? "/workspaces" : "/login";
-  const primaryLabel = session?.user ? "Open app" : "Log in";
+  const user = session?.user ?? null;
+  const userName =
+    (user?.name || user?.email?.split("@")[0] || "User")?.trim() || "User";
+  const avatarImage = user?.image ?? null;
+  const avatarInitial = (userName[0] || "U").toUpperCase();
+  const avatarColor = getAvatarColor(userName);
 
   return (
     <nav className="flex w-full flex-wrap items-center gap-3 sm:gap-4">
@@ -84,11 +107,35 @@ export function LandingNav({ showLogo = true }: LandingNavProps) {
           </Link>
         </div>
 
-        <Link href={primaryHref}>
-          <Button className="h-10 rounded-none border border-zinc-950 bg-zinc-950 px-4 text-sm font-medium text-[#f6f1e8] transition-colors hover:bg-zinc-800 sm:px-6">
-            {isPending ? "Loading..." : primaryLabel}
-          </Button>
-        </Link>
+        {user ? (
+          <Link
+            href="/workspaces"
+            aria-label="Open workspaces"
+            className="flex h-10 w-10 items-center justify-center rounded-sm border border-zinc-950/10 bg-white/80 transition-colors hover:border-zinc-950 hover:bg-white"
+          >
+            <div className="relative">
+              <Avatar className="size-7 rounded-sm">
+                {avatarImage ? (
+                  <AvatarImage src={avatarImage} alt={userName} />
+                ) : null}
+                <AvatarFallback
+                  className={cn("rounded-sm text-xs font-semibold text-white", avatarColor)}
+                >
+                  {avatarInitial}
+                </AvatarFallback>
+              </Avatar>
+              <span className="absolute -bottom-1 -right-1 flex size-4 items-center justify-center rounded-sm border border-white bg-zinc-950 text-white">
+                <HugeiconsIcon icon={GridViewIcon} className="size-2.5" />
+              </span>
+            </div>
+          </Link>
+        ) : (
+          <Link href="/login">
+            <Button className="h-10 rounded-sm border border-zinc-950 bg-zinc-950 px-4 text-sm font-medium text-[#f6f1e8] transition-colors hover:bg-zinc-800 sm:px-6">
+              {isPending ? "Loading..." : "Log in"}
+            </Button>
+          </Link>
+        )}
       </div>
 
       <div className="flex w-full gap-2 overflow-x-auto pb-1 md:hidden">
